@@ -21,9 +21,9 @@ object StackOverflow extends StackOverflow {
   def main(args: Array[String]): Unit = {
     val lines   = sc.textFile("src/main/resources/stackoverflow/stackoverflow.csv")
     val raw     = rawPostings(lines)
-    val grouped = groupedPostings(raw)
+    val grouped = groupedPostings(raw).cache()
     val scored  = scoredPostings(grouped)
-    val vectors = vectorPostings(scored)
+    val vectors = vectorPostings(scored).cache()
     assert(vectors.count() == 2121822, "Incorrect number of vectors: " + vectors.count())
 
     val means   = kmeans(sampleVectors(vectors), vectors, debug = true)
@@ -82,7 +82,7 @@ class StackOverflow extends Serializable {
     val answers = postings.filter(p => p.postingType == 2 && p.parentId.isDefined)
       .map(p => (p.parentId.get, p))
 
-    questions.join(answers).groupByKey().cache()
+    questions.join(answers).groupByKey()
   }
 
 
@@ -103,7 +103,7 @@ class StackOverflow extends Serializable {
       case _ => None
     }
 
-    scored.map(t => (langs.indexOf(t._1.tags.get) * langSpread, t._2)).cache()
+    scored.map(t => (langs.indexOf(t._1.tags.get) * langSpread, t._2))
   }
 
 
